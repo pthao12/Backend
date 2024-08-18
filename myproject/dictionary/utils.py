@@ -1,8 +1,8 @@
-import json
 from django.http import HttpResponse
 import requests
 from .serializers import KanjiSerializer, WordSerializer, MaziiWordExampleReturnTypeSerializer
-from .models import KanjiMeaning
+import xml.etree.ElementTree as ET
+from django.http import JsonResponse
 
 def fetchWordMeaning(search_word, lang, search_type):
     url = "https://mazii.net/api/search"
@@ -112,3 +112,59 @@ def getExample(word, lang):
         return result
     else:
         return {"error": "Failed to fetch data from external API"}
+    
+def getComment(mobileId, type, lang, word):    
+    url = "https://api.mazii.net/api/get-mean"
+    response = requests.post(
+        url,
+        json={
+            'wordId': mobileId,
+            'type': type,
+            'dict': lang,
+            'word': word
+        },
+        headers={'Content-Type': 'application/json'})
+
+    if response.status_code == 200:
+        comment_data = response.json()
+        comments = comment_data.get('result', [])
+        if len(comments) > 5:
+            comments = comments[:5]
+        return comments
+    
+    if response.status_code == 304:
+        return []
+    
+    return {'error': 'Failed to fetch comments'}
+
+def unicode_encoding(word):
+    # Get the Unicode code point of the first character
+    code_point = ord(word)
+    # Convert the code point to a hexadecimal string
+    hex_code = hex(code_point)[2:]  # Remove the '0x' prefix
+    return hex_code
+
+def getKanjiArt(request):
+    try:
+        # Encode the Kanji character to its Unicode representation
+        unicode_kanji = unicode_encoding('漢')
+        url = f'https://data.mazii.net/kanji/0{unicode_kanji}.svg'
+        print(url)
+        # Fetch the SVG data
+        response = requests.get(url)
+        response.raise_for_status()  # Raise an error for bad responses
+        kanji_art_data = response.text
+
+        # Parse the SVG data
+        try:
+            # You can use ElementTree to parse XML
+            root = ET.fromstring(kanji_art_data)
+            # If needed, you can extract specific parts from the SVG data here.
+            # For simplicity, we'll return the whole SVG data.
+            svg_data = ET.tostring(root, encoding='unicode')
+            return HttpResponse(svg_data, content_type="image/svg+xml")
+        except ET.ParseError as e:
+            return JsonResponse({'error': 'Error parsing XML', 'details': str(e)}, status=500)
+
+    except requests.RequestException as e:
+        return JsonResponse({'error': 'Error fetching art', 'details': str(e)}, status=500)

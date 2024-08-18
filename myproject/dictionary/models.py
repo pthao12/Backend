@@ -52,10 +52,7 @@ class MaziiWordMeaningReturnType(models.Model):
 
 class MaziiWordExampleReturnType(models.Model):
     status = models.IntegerField()
-    results = models.JSONField()
-    
-    def __str__(self):
-        return self.MaziiWordExampleReturnType.lower()
+    results = models.ManyToManyField(WordExample)
 
 class OverallExample(models.Model):
     w = models.CharField(max_length=255)  # meaning in Vietnamese
