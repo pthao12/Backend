@@ -52,14 +52,14 @@ class MaziiWordMeaningReturnType(models.Model):
 
 class MaziiWordExampleReturnType(models.Model):
     status = models.IntegerField()
-    results = models.ManyToManyField(WordExample)
+    results = models.JSONField()
     
     def __str__(self):
         return self.MaziiWordExampleReturnType.lower()
 
 class OverallExample(models.Model):
-    m = models.CharField(max_length=255)  # meaning in Vietnamese
-    w = models.CharField(max_length=255)  # word original
+    w = models.CharField(max_length=255)  # meaning in Vietnamese
+    m = models.CharField(max_length=255)  # word original
     h = models.CharField(max_length=255)  # word kanji reading
     p = models.CharField(max_length=255)  # word furigana
 
@@ -77,14 +77,11 @@ class KanjiMeaning(models.Model):
     kun = models.CharField(max_length=255)  # kunyomi
     on = models.CharField(max_length=255)  # onyomi
     detail = models.TextField()  # fully meaning of kanji
-    example_kun = models.ManyToManyField(KunyomiExample)  # example of kunyomi reading
-    example_on = models.ManyToManyField(OnyomiExample)  # example of onyomi reading
-    example = models.ManyToManyField(OverallExample)  # kanji overall example, include on and kun
+    example_kun = models.JSONField(default=list)  # example of kunyomi reading
+    example_on = models.JSONField(default=list)  # example of onyomi reading
+    examples = models.JSONField(default=list)  # kanji overall example, include on and kun
     mobileId = models.IntegerField()  # wordID to pass in another params
     stroke_count = models.IntegerField()  # kanji stroke count
-
-    h = models.CharField(max_length=100)
-    w = models.CharField(max_length=100)
 
 class MaziiWordKanjiReturnType(models.Model):
     status = models.IntegerField()  # status as a number

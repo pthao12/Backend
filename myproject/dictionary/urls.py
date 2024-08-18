@@ -1,7 +1,7 @@
 from django.urls import path
-from .SearchField import fetchWordMeaning, searchWordSuggestion
+from .SearchField import searchWordMeaning, searchWordSuggestion
 
 urlpatterns = [
-    path('', fetchWordMeaning, name='search-field'),
+    path('', searchWordMeaning, name='search-field'),
     path('suggestions/', searchWordSuggestion, name='suggestions'),
 ]

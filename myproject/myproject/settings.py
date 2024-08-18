@@ -45,7 +45,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    #'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -130,12 +130,9 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# settings.py
 CSRF_COOKIE_SECURE = True  # Đảm bảo cookie chỉ được gửi qua HTTPS
 CSRF_COOKIE_HTTPONLY = False  # Đặt thành True nếu bạn không cần JavaScript truy cập cookie
 CSRF_USE_SESSIONS = False
-
-# settings.py
 
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': (

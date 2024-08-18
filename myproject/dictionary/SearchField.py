@@ -1,14 +1,7 @@
 from django.shortcuts import redirect, render
-from .models import MaziiWordTranslate, KanjiMeaning, Kanji
 from .forms import SearchForm, SuggestionsForm
-from django.db import models
 from django.http import HttpResponse
-from .utils import fetchWordMeaning, fetchWordSuggestion
-
-class SearchField(models.Model):
-    myRef = any
-    result_mazzii = models.ManyToManyField(MaziiWordTranslate)  # Danh sách kết quả của MaziiWordTranslate
-    result_kanji = models.ManyToManyField(KanjiMeaning)  # Danh sách kết quả của KanjiMeaning
+from .utils import fetchWordMeaning, fetchWordSuggestion, fetchExample
 
 def searchWordMeaning(request):
     results = []
