@@ -26,8 +26,11 @@ class WordExample(models.Model):
         return self.Kanji.lower()
     
 class WordMeaning(models.Model):
-    mean = models.CharField(max_length=300)
-    examples = models.ManyToManyField(WordExample)
+    short_mean = models.CharField(max_length=255)
+    mobileId = models.IntegerField() 
+    word =  models.CharField(max_length=255)
+    phonetic = models.CharField(max_length=255)
+    means = models.JSONField()
 
     def __str__(self):
         return self.WordMeaning.lower()

@@ -1,59 +1,49 @@
+from dataclasses import field
 from django.http import HttpResponse
 import requests
-from .serializers import KanjiSerializer, WordSerializer, MaziiWordExampleReturnTypeSerializer
+from .serializers import KanjiSerializer, WordSerializer
 import xml.etree.ElementTree as ET
 from django.http import JsonResponse
 
-def fetchWordMeaning(search_word, lang, search_type):
-    url = "https://mazii.net/api/search"
-    response = requests.post(url, data={
-        'dict': lang,
-        'type': search_type,
-        'query': search_word,
-        'limit': '1',
-        'page': '1'
-    })
+class dictionary:
+    searchWord: str
+    lang: str
+    searchType: str
+
+    def __init__(self, searchWord, lang, searchType):
+        # Khởi tạo các thuộc tính
+        self.searchWord = searchWord
+        self.lang = lang
+        self.searchType = searchType
     
-    # Check if the request was successful
-    if response.status_code != 200:
-        return {"error": "Failed to fetch data from the dictionary API"}
-
-    wordData = response.json()
-    # Check if the response contains data
-    if not wordData:
-        return {"error": "No data found for the given word"}
+    def getSearchWord(self):
+        return self.searchWord
     
-    result = {}
-    comment = {}
-    if search_type == "kanji":
-        wordData = wordData.get('results')
-        for i, kanji in enumerate(wordData):
-            result[i] = KanjiSerializer(data = kanji)
-            if result[i].is_valid():
-                #print(result[i].validated_data.get('mobileId'))
-                #print(result[i]['mobileId'].value(), result[i]['kanji'].value())
-                comment[i] = fetchComment(result[i])
-    else:
-        wordData = wordData.get('data')
-        for i, word in enumerate(wordData):
-            result[i] = WordSerializer(data = word)
-    return {
-        'result': result,
-        'comment': comment
-    }
+    def getLang(self):
+        return self.lang
+    
+    def getSearchType(self):
+        return self.searchType
 
-def fetchWordSuggestion(search_word, lang):
-    url = 'https://mazii.net/api/suggest'
-    response = requests.post(url, data={
-        'keyword': search_word,
-        'dict': lang
-    })
+    def getMeaning(self):
+        pass
 
-    word_data = response.json()
-    print("Received data:", word_data)  # In ra dữ liệu nhận được để kiểm tra
-    if word_data.get('status') == 200:
-        # Kiểm tra cấu trúc của 'data'
-        data_list = word_data.get('data', [])
+    def getSuggestion(self):
+        url = 'https://mazii.net/api/suggest'
+        response = requests.post(url, data={
+            'keyword': self.searchWord,
+            'dict': self.lang
+        })
+
+        if response.status_code != 200:
+            return {"error": "Failed to fetch data from the dictionary API"}
+        
+        wordData = response.json()
+
+        if not wordData:
+            return {"error": "No data found for the given word"}
+        
+        data_list = wordData.get('data', [])
         if isinstance(data_list, list):
             suggestions = [
                 {
@@ -63,79 +53,193 @@ def fetchWordSuggestion(search_word, lang):
                 } for e in data_list
             ]
             return suggestions
+
+    def getExample(self, word):
+        print('example')
+        print(self.lang, word)
+        url = "https://mazii.net/api/search"
+        response = requests.post(url, json={
+            'type': 'example',
+            'dict': self.lang,
+            'query': word,
+            'limit': '5'
+        }, headers={'Content-Type': 'application/json'})
+
+        if response.status_code != 200:
+            return {"error": "Failed to fetch data from the dictionary API"}
         
-def fetchExample(KanjiMeaning):
-    url = f'https://mina.mazii.net/api/getNoteKanji.php?word={KanjiMeaning['kanji']}'
-    response = requests.get(url)
+        exampleData = response.json().get('results', [])
 
-    if response.status_code == 200:
-        example_data = response.json()
-        if example_data:
-            return {'note': example_data[0].get('note')}
-        else:
+        if not exampleData:
             return {"error": "No data found for the given word"}
-    else:
-        return {"error": "Failed to fetch data from external API"}
+        
+        return exampleData 
     
-def fetchComment(kanji):
-    url = "https://api.mazii.net/api/get-mean"
-    #print(kanji['mobileId'], kanji['kanji'])
-    response = requests.post(url, json={
-        'wordId': kanji.validated_data.get('mobileId'),
-        'type': 'kanji',
-        'dict': 'javi',
-        'word': kanji.validated_data.get('kanji')
-    }, headers={'Content-Type': 'application/json'})
+    def getComment(self):
+        pass
     
-    if response.status_code != 200:
-        return {"error": "Failed to fetch data from the dictionary API"}
-    
-    comments = response.json()
-    if not comments:
-        return {"error": "No data found for the given word"}
-    comments = comments.get('result')
-    return comments
 
-def getExample(word, lang):
-    url = "https://mazii.net/api/search"
-    response = requests.post(url, data={
-        'type': 'example',
-        'dict': lang,
-        'query': word
-    })
-    
-    result = {}
-    if response.status_code == 200:
-        exampleData = response.json().get('result')
-        for i, example in enumerate(exampleData):
-            result[i] = MaziiWordExampleReturnTypeSerializer(data = example)
-        return result
-    else:
-        return {"error": "Failed to fetch data from external API"}
-    
-def getComment(mobileId, type, lang, word):    
-    url = "https://api.mazii.net/api/get-mean"
-    response = requests.post(
-        url,
-        json={
-            'wordId': mobileId,
-            'type': type,
-            'dict': lang,
-            'word': word
-        },
-        headers={'Content-Type': 'application/json'})
+class Kanji(dictionary):
+    def __init__(self, searchWord, lang, searchType):
+        # Khởi tạo các thuộc tính
+        super().__init__(searchWord, lang, searchType)
 
-    if response.status_code == 200:
-        comment_data = response.json()
-        comments = comment_data.get('result', [])
-        if len(comments) > 5:
-            comments = comments[:5]
+    def getMeaning(self):
+        url = "https://mazii.net/api/search"
+        response = requests.post(url, data={
+            'dict': self.lang,
+            'type': "kanji",
+            'query': self.searchWord,
+            'limit': '5',
+            'page': '1'
+        })
+                
+        # Check if the request was successful
+        if response.status_code != 200:
+            return {"error": "Failed to fetch data from the dictionary API"}
+
+        wordData = response.json().get('results', [])
+        # Check if the response contains data
+        if not wordData:
+            return {"error": "No data found for the given word"}
+        
+        meaning = {}
+        examples = {}
+        comments = {}
+        for i, kanji in enumerate(wordData):
+            meaning[i] = KanjiSerializer(data = kanji)
+            if meaning[i].is_valid():
+                meaning[i] = meaning[i].validated_data
+                examples[i] = self.getExample(meaning[i].get('kanji'))
+                comments[i] = self.getComment(meaning[i])
+        return {
+            'meaning': meaning,
+            'examples': examples,
+            'comments': comments
+        }
+    
+    def getComment(self, kanji):
+        url = "https://api.mazii.net/api/get-mean"
+        response = requests.post(url, json={
+            'wordId': kanji.get('mobileId'),
+            'type': 'kanji',
+            'dict': 'javi',
+            'word': kanji.get('kanji'),
+            'limit': '3'
+        }, headers={'Content-Type': 'application/json'})
+        
+        if response.status_code != 200:
+            return {"error": "Failed to fetch comments"}
+        
+        comments = response.json()
+
+        if not comments:
+            return {"error": "No data found for the given word"}
+        
+        comments = comments.get('result', [])
         return comments
+
+    def getKanjiArt(self):
+        try:
+            unicode_kanji = unicode_encoding(f'{self.searchWord}')
+            url = f'https://data.mazii.net/kanji/0{unicode_kanji}.svg'
+            
+            # Fetch the SVG data
+            response = requests.get(url)
+            response.raise_for_status()  
+            kanji_art_data = response.text
+
+            # Parse the SVG data
+            try:
+                # You can use ElementTree to parse XML
+                root = ET.fromstring(kanji_art_data)
+                # If needed, you can extract specific parts from the SVG data here.
+                # For simplicity, we'll return the whole SVG data.
+                svg_data = ET.tostring(root, encoding='unicode')
+                return HttpResponse(svg_data, content_type="image/svg+xml")
+            except ET.ParseError as e:
+                return JsonResponse({'error': 'Error parsing XML', 'details': str(e)}, status=500)
+
+        except requests.RequestException as e:
+            return JsonResponse({'error': 'Error fetching art', 'details': str(e)}, status=500)
+
+class Word(dictionary):
+    def __init__(self, searchWord, lang, searchType):
+        # Khởi tạo các thuộc tính
+        super().__init__(searchWord, lang, searchType)
     
-    if response.status_code == 304:
-        return []
+    def getMeaning(self):
+        url = "https://mazii.net/api/search"
+        response = requests.post(url, data={
+            'dict': self.lang,
+            'type': "word",
+            'query': self.searchWord,
+            'limit': '5',
+            'page': '1'
+        })        
+        # Check if the request was successful
+        if response.status_code != 200:
+            return {"error": "Failed to fetch data from the dictionary API"}
+
+        wordData = response.json().get('data', [])
+        # Check if the response contains data
+        if not wordData:
+            return {"error": "No data found for the given word"}
+        
+        meaning = {}
+        examples = {}
+        comments = {}
+        for i, word in enumerate(wordData):
+            meaning[i] = WordSerializer(data = word)
+            if meaning[i].is_valid():
+                meaning[i] = meaning[i].validated_data
+                print(meaning[i])
+                examples[i] = self.getExample(meaning[i].get('word'))
+                comments[i] = self.getComment(meaning[i])
+        return {
+            'meaning': meaning,
+            'examples': examples,
+            'comments': comments
+        }
+
+    def getComment(self, word):
+        print(f'comment{word.get('mobileId'), word.get('word')}')
+        url = "https://api.mazii.net/api/get-mean"
+        response = requests.post(
+            url,
+            json={
+                'wordId': word.get('mobileId'),
+                'type': 'word',
+                'dict': 'javi',
+                'word': word.get('word'),
+                'limit': '3'
+            },
+            headers={'Content-Type': 'application/json'})
+
+        if response.status_code != 200:
+            return {"error": "Failed to fetch comments"}
+        
+        comments = response.json()
+
+        if not comments:
+            return {"error": "No data found for the given word"}
+                    
+        comments = comments.get('result', [])
+        return comments
+        
+# def fetchExample(kanji):
+#     url = f'https://mina.mazii.net/api/getNoteKanji.php?word={kanji}'
+#     response = requests.get(url)
+
+#     if response.status_code == 200:
+#         example_data = response.json()
+#         if example_data:
+#             return {'note': example_data[0].get('note')}
+#         else:
+#             return {"error": "No data found for the given word"}
+#     else:
+#         return {"error": "Failed to fetch data from external API"}
     
-    return {'error': 'Failed to fetch comments'}
 
 def unicode_encoding(word):
     # Get the Unicode code point of the first character
@@ -144,27 +248,4 @@ def unicode_encoding(word):
     hex_code = hex(code_point)[2:]  # Remove the '0x' prefix
     return hex_code
 
-def getKanjiArt(request):
-    try:
-        # Encode the Kanji character to its Unicode representation
-        unicode_kanji = unicode_encoding('漢')
-        url = f'https://data.mazii.net/kanji/0{unicode_kanji}.svg'
-        print(url)
-        # Fetch the SVG data
-        response = requests.get(url)
-        response.raise_for_status()  # Raise an error for bad responses
-        kanji_art_data = response.text
 
-        # Parse the SVG data
-        try:
-            # You can use ElementTree to parse XML
-            root = ET.fromstring(kanji_art_data)
-            # If needed, you can extract specific parts from the SVG data here.
-            # For simplicity, we'll return the whole SVG data.
-            svg_data = ET.tostring(root, encoding='unicode')
-            return HttpResponse(svg_data, content_type="image/svg+xml")
-        except ET.ParseError as e:
-            return JsonResponse({'error': 'Error parsing XML', 'details': str(e)}, status=500)
-
-    except requests.RequestException as e:
-        return JsonResponse({'error': 'Error fetching art', 'details': str(e)}, status=500)
