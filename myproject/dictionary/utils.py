@@ -1,7 +1,7 @@
 from dataclasses import field
 from django.http import HttpResponse
 import requests
-from .serializers import KanjiSerializer, WordSerializer
+from .serializers import KanjiSerializer, WordSerializer, ExampleSerializer, CommentSerializer
 import xml.etree.ElementTree as ET
 from django.http import JsonResponse
 
@@ -55,8 +55,6 @@ class dictionary:
             return suggestions
 
     def getExample(self, word):
-        print('example')
-        print(self.lang, word)
         url = "https://mazii.net/api/search"
         response = requests.post(url, json={
             'type': 'example',
@@ -69,11 +67,17 @@ class dictionary:
             return {"error": "Failed to fetch data from the dictionary API"}
         
         exampleData = response.json().get('results', [])
+        result = {}
 
         if not exampleData:
             return {"error": "No data found for the given word"}
         
-        return exampleData 
+        for i, example in enumerate(exampleData):
+            result[i] = ExampleSerializer(data = example)
+            if result[i].is_valid():
+                result[i] = result[i].validated_data
+
+        return result 
     
     def getComment(self):
         pass
@@ -131,13 +135,23 @@ class Kanji(dictionary):
         if response.status_code != 200:
             return {"error": "Failed to fetch comments"}
         
-        comments = response.json()
+        commentData = response.json()
 
-        if not comments:
+        if not commentData:
+            return {"error": "No data found for the given word"}
+                    
+        commentData = commentData.get('result', [])
+        result = {}
+
+        if not commentData:
             return {"error": "No data found for the given word"}
         
-        comments = comments.get('result', [])
-        return comments
+        for i, comment in enumerate(commentData):
+            result[i] = CommentSerializer(data = comment)
+            if result[i].is_valid():
+                result[i] = result[i].validated_data
+
+        return result
 
     def getKanjiArt(self):
         try:
@@ -193,7 +207,6 @@ class Word(dictionary):
             meaning[i] = WordSerializer(data = word)
             if meaning[i].is_valid():
                 meaning[i] = meaning[i].validated_data
-                print(meaning[i])
                 examples[i] = self.getExample(meaning[i].get('word'))
                 comments[i] = self.getComment(meaning[i])
         return {
@@ -203,7 +216,6 @@ class Word(dictionary):
         }
 
     def getComment(self, word):
-        print(f'comment{word.get('mobileId'), word.get('word')}')
         url = "https://api.mazii.net/api/get-mean"
         response = requests.post(
             url,
@@ -219,27 +231,23 @@ class Word(dictionary):
         if response.status_code != 200:
             return {"error": "Failed to fetch comments"}
         
-        comments = response.json()
+        commentData = response.json()
 
-        if not comments:
+        if not commentData:
             return {"error": "No data found for the given word"}
                     
-        comments = comments.get('result', [])
-        return comments
-        
-# def fetchExample(kanji):
-#     url = f'https://mina.mazii.net/api/getNoteKanji.php?word={kanji}'
-#     response = requests.get(url)
+        commentData = commentData.get('result', [])
+        result = {}
 
-#     if response.status_code == 200:
-#         example_data = response.json()
-#         if example_data:
-#             return {'note': example_data[0].get('note')}
-#         else:
-#             return {"error": "No data found for the given word"}
-#     else:
-#         return {"error": "Failed to fetch data from external API"}
-    
+        if not commentData:
+            return {"error": "No data found for the given word"}
+        
+        for i, comment in enumerate(commentData):
+            result[i] = CommentSerializer(data = comment)
+            if result[i].is_valid():
+                result[i] = result[i].validated_data
+
+        return result     
 
 def unicode_encoding(word):
     # Get the Unicode code point of the first character

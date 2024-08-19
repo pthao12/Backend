@@ -17,23 +17,20 @@ class Kanji(models.Model):
     def __str__(self):
         return self.Kanji.lower()
 
-class WordExample(models.Model):
+class Example(models.Model):
+    transcription = models.TextField()
     content = models.TextField()
     mean = models.TextField()
-    transcription = models.TextField()
-
-    def __str__(self):
-        return self.Kanji.lower()
     
+class Comment(models.Model):
+    mean = models.TextField()
+
 class WordMeaning(models.Model):
     short_mean = models.CharField(max_length=255)
     mobileId = models.IntegerField() 
     word =  models.CharField(max_length=255)
     phonetic = models.CharField(max_length=255)
     means = models.JSONField()
-
-    def __str__(self):
-        return self.WordMeaning.lower()
 
 class MaziiWordTranslate(models.Model):
     word = models.CharField(max_length=100, unique=True)
@@ -55,7 +52,7 @@ class MaziiWordMeaningReturnType(models.Model):
 
 class MaziiWordExampleReturnType(models.Model):
     status = models.IntegerField()
-    results = models.ManyToManyField(WordExample)
+    results = models.ManyToManyField(Example)
 
 class OverallExample(models.Model):
     w = models.CharField(max_length=255)  # meaning in Vietnamese
