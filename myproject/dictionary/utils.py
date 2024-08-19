@@ -65,7 +65,7 @@ def fetchWordSuggestion(search_word, lang):
             return suggestions
         
 def fetchExample(KanjiMeaning):
-    url = f'https://mina.mazii.net/api/getNoteKanji.php?word={KanjiMeaning['kanji']}'
+    url = f"https://mina.mazii.net/api/getNoteKanji.php?word={KanjiMeaning['kanji']}"
     response = requests.get(url)
 
     if response.status_code == 200:
