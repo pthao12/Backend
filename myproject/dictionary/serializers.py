@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import KanjiMeaning, WordMeaning, Example, Comment
+from .models import KanjiMeaning, WordMeaning, WordExample, Comment, Reading
 
 class KanjiSerializer(serializers.ModelSerializer):
     class Meta:
@@ -13,10 +13,15 @@ class WordSerializer(serializers.ModelSerializer):
 
 class ExampleSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Example
+        model = WordExample
         fields = '__all__'
 
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
+        fields = '__all__'
+
+class ReadingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Reading
         fields = '__all__'

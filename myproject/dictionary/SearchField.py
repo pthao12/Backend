@@ -1,7 +1,8 @@
 from django.shortcuts import redirect, render
 from .forms import SearchForm, SuggestionsForm
 from django.http import HttpResponse
-from .utils import Kanji, Word
+from .utils import Kanji, NonKanji
+from .Flashcard import getWordsRelatedToKanji
 
 def searchWordMeaning(request):
     results = []
@@ -11,12 +12,14 @@ def searchWordMeaning(request):
             search_word = form.cleaned_data.get('search_word')
             lang = form.cleaned_data.get('lang')
             search_type = form.cleaned_data.get('type')
+            check = ''
             if search_type == 'kanji':
-                results = Kanji(search_word, lang, search_type) 
+                results = Kanji(search_word, lang, search_type)
+                check = getWordsRelatedToKanji(results)
             else:
-                results = Word(search_word, lang, search_type) 
+                results = NonKanji(search_word, lang, search_type) 
             results = results.getMeaning()
-            return HttpResponse(f"<h1>{results}</h1>")
+            return HttpResponse(f"<h1>{check}</h1>")
     else:
         return render(request, 'search.html', {'form': SearchForm})
     
@@ -30,7 +33,7 @@ def searchWordSuggestion(request):
             if type == 'kanji':
                 results = Kanji(search_word, lang, search_type) 
             else:
-                results = Word(search_word, lang, search_type) 
+                results = NonKanji(search_word, lang, search_type) 
             return HttpResponse(f"<h1>{results.getSuggestion()}</h1>")
     else:
         return render(request, 'suggestions.html', {'form': SearchForm})

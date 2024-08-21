@@ -1,37 +1,34 @@
-from dataclasses import field
 from django.http import HttpResponse
 import requests
-from .serializers import KanjiSerializer, WordSerializer, ExampleSerializer, CommentSerializer
+from .serializers import KanjiSerializer, WordSerializer, ExampleSerializer, CommentSerializer, ReadingSerializer
 import xml.etree.ElementTree as ET
 from django.http import JsonResponse
+from .models import Example, Reading
 
-class dictionary:
-    searchWord: str
+class Word:
+    word: str
     lang: str
-    searchType: str
+    type: str
 
-    def __init__(self, searchWord, lang, searchType):
+    def __init__(self, word, lang, type):
         # Khởi tạo các thuộc tính
-        self.searchWord = searchWord
+        self.word = word
         self.lang = lang
-        self.searchType = searchType
+        self.type = type
     
-    def getSearchWord(self):
-        return self.searchWord
+    def getWord(self):
+        return self.word
     
     def getLang(self):
         return self.lang
     
-    def getSearchType(self):
-        return self.searchType
-
-    def getMeaning(self):
-        pass
+    def getType(self):
+        return self.type
 
     def getSuggestion(self):
         url = 'https://mazii.net/api/suggest'
         response = requests.post(url, data={
-            'keyword': self.searchWord,
+            'keyword': self.word,
             'dict': self.lang
         })
 
@@ -79,23 +76,25 @@ class dictionary:
 
         return result 
     
-    def getComment(self):
+    def getComment(self, word):
+        pass
+
+    def getMeaning(self):
         pass
     
 
-class Kanji(dictionary):
-    def __init__(self, searchWord, lang, searchType):
+class Kanji(Word):
+    def __init__(self, word, lang, type):
         # Khởi tạo các thuộc tính
-        super().__init__(searchWord, lang, searchType)
+        super().__init__(word, lang, type)
 
     def getMeaning(self):
         url = "https://mazii.net/api/search"
         response = requests.post(url, data={
             'dict': self.lang,
             'type': "kanji",
-            'query': self.searchWord,
-            'limit': '5',
-            'page': '1'
+            'query': self.word,
+            'limit': '1'
         })
                 
         # Check if the request was successful
@@ -122,13 +121,13 @@ class Kanji(dictionary):
             'comments': comments
         }
     
-    def getComment(self, kanji):
+    def getComment(self, word):
         url = "https://api.mazii.net/api/get-mean"
         response = requests.post(url, json={
-            'wordId': kanji.get('mobileId'),
+            'wordId': word.get('mobileId'),
             'type': 'kanji',
             'dict': 'javi',
-            'word': kanji.get('kanji'),
+            'word': word.get('kanji'),
             'limit': '3'
         }, headers={'Content-Type': 'application/json'})
         
@@ -153,9 +152,36 @@ class Kanji(dictionary):
 
         return result
 
+    def getExampleKun(self, exampleKunData):
+        result = []
+        for character, readings in exampleKunData.items():
+            print(character)
+            temp = {}
+            for i, reading in enumerate(readings):
+                temp[i] = ReadingSerializer(data = reading)
+                if temp[i].is_valid():
+                    temp[i] = temp[i].validated_data
+            print(temp)
+            result.append((character, temp))
+        return result
+
+    def getExampleOn(self, exampleOnData):
+        print(exampleOnData)
+        result = []
+        for character, readings in exampleOnData.items():
+            print(character)
+            temp = {}
+            for i, reading in enumerate(readings):
+                temp[i] = ReadingSerializer(data = reading)
+                if temp[i].is_valid():
+                    temp[i] = temp[i].validated_data
+            print(temp)
+            result.append((character, temp))
+        return result
+
     def getKanjiArt(self):
         try:
-            unicode_kanji = unicode_encoding(f'{self.searchWord}')
+            unicode_kanji = unicode_encoding(f'{self.word}')
             url = f'https://data.mazii.net/kanji/0{unicode_kanji}.svg'
             
             # Fetch the SVG data
@@ -177,19 +203,18 @@ class Kanji(dictionary):
         except requests.RequestException as e:
             return JsonResponse({'error': 'Error fetching art', 'details': str(e)}, status=500)
 
-class Word(dictionary):
-    def __init__(self, searchWord, lang, searchType):
+class NonKanji(Word):
+    def __init__(self, word, lang, type):
         # Khởi tạo các thuộc tính
-        super().__init__(searchWord, lang, searchType)
+        super().__init__(word, lang, type)
     
     def getMeaning(self):
         url = "https://mazii.net/api/search"
         response = requests.post(url, data={
             'dict': self.lang,
             'type': "word",
-            'query': self.searchWord,
-            'limit': '5',
-            'page': '1'
+            'query': self.word,
+            'limit': '1'
         })        
         # Check if the request was successful
         if response.status_code != 200:
@@ -255,5 +280,3 @@ def unicode_encoding(word):
     # Convert the code point to a hexadecimal string
     hex_code = hex(code_point)[2:]  # Remove the '0x' prefix
     return hex_code
-
-
