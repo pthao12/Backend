@@ -155,27 +155,22 @@ class Kanji(Word):
     def getExampleKun(self, exampleKunData):
         result = []
         for character, readings in exampleKunData.items():
-            print(character)
             temp = {}
             for i, reading in enumerate(readings):
                 temp[i] = ReadingSerializer(data = reading)
                 if temp[i].is_valid():
                     temp[i] = temp[i].validated_data
-            print(temp)
             result.append((character, temp))
         return result
 
     def getExampleOn(self, exampleOnData):
-        print(exampleOnData)
         result = []
         for character, readings in exampleOnData.items():
-            print(character)
             temp = {}
             for i, reading in enumerate(readings):
                 temp[i] = ReadingSerializer(data = reading)
                 if temp[i].is_valid():
                     temp[i] = temp[i].validated_data
-            print(temp)
             result.append((character, temp))
         return result
 
