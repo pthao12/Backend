@@ -105,3 +105,15 @@ class Flashcard:
         self.log()
         return 1
 
+    def addNonKanji(self, word):
+        wordMeaning = word.getMeaning()
+        w = wordMeaning.get('word')
+        m = wordMeaning.get('short_mean')
+        p = wordMeaning.get('phonetic')
+        reading = {
+            'w': w,
+            'm': m,
+            'p': p
+        }
+        self.addWord(reading)
+        self.log()

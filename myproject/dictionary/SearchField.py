@@ -20,9 +20,12 @@ def searchWordMeaning(request):
                 print('end')
                 #check = getWordsRelatedToKanji(results)
             else:
-                results = NonKanji(search_word, lang, search_type) 
+                results = NonKanji(search_word, lang, search_type)
+                temp = Flashcard("1")
+                temp.addNonKanji(results)
+                print('end')
             results = results.getMeaning()
-            return HttpResponse(f"<h1>{temp}</h1>")
+            return HttpResponse(f"<h1>{1}</h1>")
     else:
         return render(request, 'search.html', {'form': SearchForm})
     
