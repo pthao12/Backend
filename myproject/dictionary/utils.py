@@ -9,12 +9,14 @@ class Word:
     word: str
     lang: str
     type: str
+    mobileId: str
 
-    def __init__(self, word, lang, type):
+    def __init__(self, word, lang, type, mobileId=None):
         # Khởi tạo các thuộc tính
         self.word = word
         self.lang = lang
         self.type = type
+        self.mobileId = mobileId
     
     def getWord(self):
         return self.word
@@ -51,12 +53,12 @@ class Word:
             ]
             return suggestions
 
-    def getExample(self, word):
+    def getExample(self):
         url = "https://mazii.net/api/search"
         response = requests.post(url, json={
             'type': 'example',
             'dict': self.lang,
-            'query': word,
+            'query': self.word,
             'limit': '5'
         }, headers={'Content-Type': 'application/json'})
 
@@ -76,6 +78,11 @@ class Word:
 
         return result 
     
+    def getMobileId(self):
+        if self.mobileId is None:
+            word = self.getMeaning()
+        return self.mobileId
+
     def getComment(self, word):
         pass
 
@@ -96,7 +103,6 @@ class Kanji(Word):
             'query': self.word,
             'limit': '1'
         })
-                
         # Check if the request was successful
         if response.status_code != 200:
             return {"error": "Failed to fetch data from the dictionary API"}
@@ -106,28 +112,28 @@ class Kanji(Word):
         if not wordData:
             return {"error": "No data found for the given word"}
         
-        meaning = {}
-        examples = {}
-        comments = {}
-        for i, kanji in enumerate(wordData):
-            meaning[i] = KanjiSerializer(data = kanji)
-            if meaning[i].is_valid():
-                meaning[i] = meaning[i].validated_data
-                examples[i] = self.getExample(meaning[i].get('kanji'))
-                comments[i] = self.getComment(meaning[i])
-        return {
-            'meaning': meaning,
-            'examples': examples,
-            'comments': comments
-        }
+        meaning = KanjiSerializer(data = wordData[0])
+        if meaning.is_valid():
+            meaning = meaning.validated_data
+            self.mobileId = meaning.get('mobileId')
+            return meaning
+        # print('end')
+        # print(meaning)
+
+        # for i, kanji in enumerate(wordData):
+        #     meaning[i] = KanjiSerializer(data = kanji)
+        #     if meaning[i].is_valid():
+        #         meaning[i] = meaning[i].validated_data
+        #         self.mobileId = meaning[i].get('mobileId')
+        return {}
     
-    def getComment(self, word):
+    def getComment(self):
         url = "https://api.mazii.net/api/get-mean"
         response = requests.post(url, json={
-            'wordId': word.get('mobileId'),
+            'wordId': self.getMobileId(),
             'type': 'kanji',
             'dict': 'javi',
-            'word': word.get('kanji'),
+            'word': self.word,
             'limit': '3'
         }, headers={'Content-Type': 'application/json'})
         
@@ -220,30 +226,27 @@ class NonKanji(Word):
         if not wordData:
             return {"error": "No data found for the given word"}
         
-        meaning = {}
-        examples = {}
-        comments = {}
-        for i, word in enumerate(wordData):
-            meaning[i] = WordSerializer(data = word)
-            if meaning[i].is_valid():
-                meaning[i] = meaning[i].validated_data
-                examples[i] = self.getExample(meaning[i].get('word'))
-                comments[i] = self.getComment(meaning[i])
-        return {
-            'meaning': meaning,
-            'examples': examples,
-            'comments': comments
-        }
+        meaning = WordSerializer(data = wordData[0])
+        if meaning.is_valid():
+            meaning = meaning.validated_data
+            self.mobileId = meaning.get('mobileId')
+            return meaning
+        # for i, word in enumerate(wordData):
+        #     meaning[i] = WordSerializer(data = word)
+        #     if meaning[i].is_valid():
+        #         meaning[i] = meaning[i].validated_data
+        #         self.mobileId = meaning[i].get('mobileId')
+        return {}
 
-    def getComment(self, word):
+    def getComment(self):
         url = "https://api.mazii.net/api/get-mean"
         response = requests.post(
             url,
             json={
-                'wordId': word.get('mobileId'),
+                'wordId': self.getMobileId(),
                 'type': 'word',
                 'dict': 'javi',
-                'word': word.get('word'),
+                'word': self.word,
                 'limit': '3'
             },
             headers={'Content-Type': 'application/json'})

@@ -10,10 +10,10 @@ class Comment(models.Model):
 
 class WordMeaning(models.Model):
     short_mean = models.CharField(max_length=255, null=True, blank=True)
-    mobileId = models.IntegerField(default=0) 
+    mobileId = models.IntegerField(default=0, blank=True, null=True) 
     word =  models.CharField(max_length=255, null=True, blank=True)
     phonetic = models.CharField(max_length=255, null=True, blank=True)
-    means = models.JSONField(default=dict)
+    means = models.JSONField(default=dict, blank=True, null=True)
 
 class OverallExample(models.Model):
     w = models.CharField(max_length=255, null=True, blank=True)  # meaning in Vietnamese
@@ -27,24 +27,24 @@ class KanjiMeaning(models.Model):
     kun = models.CharField(max_length=255, null=True, blank=True)  # kunyomi
     on = models.CharField(max_length=255, null=True, blank=True)  # onyomi
     detail = models.TextField(blank=True, null=True)  # fully meaning of kanji
-    examples = models.JSONField(default=dict)
-    example_on = models.JSONField(default=dict)
-    example_kun = models.JSONField(default=dict)
-    mobileId = models.IntegerField(default=0)  # wordID to pass in another params
-    stroke_count = models.IntegerField(default=0)  # kanji stroke count
-    level = models.JSONField(default=dict)
+    examples = models.JSONField(default=dict, blank=True, null=True)
+    example_on = models.JSONField(default=dict, blank=True, null=True)
+    example_kun = models.JSONField(default=dict, blank=True, null=True)
+    mobileId = models.IntegerField(default=0, blank=True, null=True)  # wordID to pass in another params
+    stroke_count = models.IntegerField(default=0, blank=True, null=True)  # kanji stroke count
+    level = models.JSONField(default=dict, blank=True, null=True)
 
 class Example(models.Model):
-    character = models.CharField(max_length=10, unique=True)
+    character = models.CharField(max_length=10, unique=True, blank=True, null=True)
     readings = models.ManyToManyField('Reading', related_name='kanji')
     
     def __str__(self):
         return f'{self.character} {self.readings}'
 
 class Reading(models.Model):
-    w = models.CharField(max_length=200)
-    m = models.CharField(max_length=200)
-    p = models.CharField(max_length=200)
+    w = models.CharField(max_length=200, blank=True, null=True)
+    m = models.CharField(max_length=200, blank=True, null=True)
+    p = models.CharField(max_length=200, blank=True, null=True)
 
     def __str__(self):
         return f'{self.w} ({self.p}) {self.m}'
