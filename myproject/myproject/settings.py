@@ -77,14 +77,20 @@ WSGI_APPLICATION = 'myproject.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        # 'ENGINE': 'django.db.backends.sqlite3',
+        # 'NAME': BASE_DIR / 'db.sqlite3',
         #'ENGINE': 'django.db.backends.postgresql',
         #'NAME': 'railway',
         #'USER': 'postgres',
         #'PASSWORD': 'ueAmqzCaighOHeuuNhaiVTRzpWrKBWyk',
         #'HOST': 'postgres.railway.internal',
         #'PORT': '5432',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'learningjapaneseapp',
+        'USER': 'postgres',
+        'PASSWORD': '123',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 

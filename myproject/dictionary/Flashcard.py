@@ -1,4 +1,4 @@
-from .models import Example, Reading
+from .models import Example, Reading, FlashcardKanji, FlashcardList, FlashcardWord
 from .serializers import ReadingSerializer
 from .utils import Word, Kanji, NonKanji
 
@@ -19,11 +19,13 @@ class Flashcard:
     wordList = []
     kanjiList = []
     extractKanjiList = []
-    list_id = str
+    list = FlashcardList
+    name = str
 
-    def __init__(self, list_id):
+    def __init__(self, name):
         # Khởi tạo các thuộc tính
-        self.list_id = list_id
+        self.name = name
+        self.list = self.addList()
 
     #def addWord(self, content, list_id, id):
         # self.wordList.append_if_not_exists((content, list_id, id))
@@ -37,23 +39,18 @@ class Flashcard:
         return kanji_list # return a list
     
     def getSinoVietnamese(self, kanji): # đầu vào là một object Word
-        kanjiMeaning = kanji.getMeaning() 
-        #print(kanjiMeaning)
-        return kanjiMeaning.get('mean') # Lấy âm hán việt
-    
-    def addExtractKanjiList(self, word_id, kanji_id):
-        data = (word_id, kanji_id)
-        append_if_not_exists(self.extractKanjiList, data)
+        kanjiMeaning = kanji.getMeaning().get('mean').split(',')
+        return kanjiMeaning[0].strip() # Lấy âm hán việt
 
-    def addKanji(self, kanji_id, word, meaning):
-        #meaning = self.getSinoVietnamese(kanji)
-        # id = kanji.getMobileId()
-        data = (kanji_id, word, meaning)
-        append_if_not_exists(self.kanjiList, data)
+    def addKanji(self, kanji_id, writing, hanviet, word):
+        print(kanji_id)
+        FlashcardKanji.add(kanji_id, writing, hanviet, word)
 
-    def addWordList(self, id, writing, meaning, furigana):
-        data = (id, self.list_id, writing, meaning, furigana)
-        append_if_not_exists(self.wordList, data)
+    def addWord(self, word_id, writing, meaning, furigana):
+        FlashcardWord.add(word_id, writing, meaning, furigana, self.list)
+
+    def addList(self):
+        return FlashcardList.add(self.name)
 
     def log(self):
         print('Kanji List :')
@@ -63,7 +60,7 @@ class Flashcard:
         print('Extract Kanji List:')
         print(self.extractKanjiList)
 
-    def addWord(self, readings):
+    def add(self, readings):
         if readings.get('w') not in self.wordList:
             # add từ vào wordList
             temp = NonKanji(readings.get('w'), 'javi', 'word')
@@ -72,7 +69,7 @@ class Flashcard:
             meaning = readings.get('m')
             furigana = readings.get('p')
             #print(word_id, writing, meaning, furigana)
-            self.addWordList(word_id, writing, meaning, furigana)
+            new_word = self.addWord(word_id, writing, meaning, furigana)
             
             # add từ vào extractkanjilist và kanjilist
             extractList = self.extractKanji(readings.get('w'))
@@ -83,8 +80,7 @@ class Flashcard:
                 kanji_id = kanji.getMobileId()
 
                 #print(kanji_id, element, mean)
-                self.addKanji(kanji_id, element, mean)
-                self.addExtractKanjiList(word_id, kanji_id)
+                self.addKanji(kanji_id, element, mean, new_word)
 
     def addWordsRelatedToKanji(self, word, num_vocab): #word là một object Class
         # Lấy data
@@ -95,12 +91,12 @@ class Flashcard:
         #Xử lý ví dụ Kunyomi
         for _, readings in exampleKun:
             for i in range(min(num_vocab, len(readings))):
-                self.addWord(readings[i])
+                self.add(readings[i])
         
         #Xử lý ví dụ Onyomi
         for _, readings in exampleOn:
             for i in range(min(num_vocab, len(readings))):
-                self.addWord(readings[i])
+                self.add(readings[i])
 
         self.log()
         return 1
@@ -115,5 +111,5 @@ class Flashcard:
             'm': m,
             'p': p
         }
-        self.addWord(reading)
+        self.add(reading)
         self.log()
