@@ -2,7 +2,7 @@ from django.shortcuts import redirect, render
 from .forms import SearchForm, SuggestionsForm
 from django.http import HttpResponse
 from .utils import Kanji, NonKanji
-from .Flashcard import getWordsRelatedToKanji, Flashcard
+from flashcard.utils import Flashcard
 
 def searchWordMeaning(request):
     results = []

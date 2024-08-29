@@ -1,6 +1,5 @@
-from .models import Example, Reading, FlashcardKanji, FlashcardList, FlashcardWord
-from .serializers import ReadingSerializer
-from .utils import Word, Kanji, NonKanji
+from .models import FlashcardKanji, FlashcardList, FlashcardWord
+from dictionary.utils import Kanji, NonKanji
 
 def getWordsRelatedToKanji(Word):
     kanjiMeaning = Word.getMeaning()
@@ -16,9 +15,6 @@ def append_if_not_exists(lst, item):
         lst.append(item)
 
 class Flashcard:
-    wordList = []
-    kanjiList = []
-    extractKanjiList = []
     list = FlashcardList
     name = str
 
@@ -44,21 +40,22 @@ class Flashcard:
 
     def addKanji(self, kanji_id, writing, hanviet, word):
         print(kanji_id)
-        FlashcardKanji.add(kanji_id, writing, hanviet, word)
+        return FlashcardKanji.add(kanji_id, writing, hanviet, word)
 
     def addWord(self, word_id, writing, meaning, furigana):
-        FlashcardWord.add(word_id, writing, meaning, furigana, self.list)
+        print(self.list)
+        return FlashcardWord.add(word_id, writing, meaning, furigana, self.list)
 
     def addList(self):
         return FlashcardList.add(self.name)
 
-    def log(self):
-        print('Kanji List :')
-        print(self.kanjiList)
-        print('Word List:')
-        print(self.wordList)
-        print('Extract Kanji List:')
-        print(self.extractKanjiList)
+    # def log(self):
+    #     print('Kanji List :')
+    #     print(self.kanjiList)
+    #     print('Word List:')
+    #     print(self.wordList)
+    #     print('Extract Kanji List:')
+    #     print(self.extractKanjiList)
 
     def add(self, readings):
         if readings.get('w') not in self.wordList:
@@ -70,6 +67,7 @@ class Flashcard:
             furigana = readings.get('p')
             #print(word_id, writing, meaning, furigana)
             new_word = self.addWord(word_id, writing, meaning, furigana)
+            print(word_id, writing, meaning, furigana)
             
             # add từ vào extractkanjilist và kanjilist
             extractList = self.extractKanji(readings.get('w'))
@@ -98,7 +96,7 @@ class Flashcard:
             for i in range(min(num_vocab, len(readings))):
                 self.add(readings[i])
 
-        self.log()
+        # self.log()
         return 1
 
     def addNonKanji(self, word):
