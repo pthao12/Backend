@@ -1,5 +1,6 @@
 from .models import FlashcardKanji, FlashcardList, FlashcardWord
 from dictionary.utils import Kanji, NonKanji
+from django.core.exceptions import ObjectDoesNotExist
 
 def getWordsRelatedToKanji(Word):
     kanjiMeaning = Word.getMeaning()
@@ -9,10 +10,6 @@ def getWordsRelatedToKanji(Word):
         'kun': kunData,
         'on': onData
     }
-
-def append_if_not_exists(lst, item):
-    if item not in lst:
-        lst.append(item)
 
 class Flashcard:
     list = FlashcardList
@@ -40,11 +37,11 @@ class Flashcard:
 
     def addKanji(self, kanji_id, writing, hanviet, word):
         print(kanji_id)
-        return FlashcardKanji.add(kanji_id, writing, hanviet, word)
+        return FlashcardKanji.add(kanji_id, writing, hanviet, word.id)
 
     def addWord(self, word_id, writing, meaning, furigana):
         print(self.list)
-        return FlashcardWord.add(word_id, writing, meaning, furigana, self.list)
+        return FlashcardWord.add(word_id, writing, meaning, furigana, self.list.id)
 
     def addList(self):
         return FlashcardList.add(self.name)
@@ -58,27 +55,26 @@ class Flashcard:
     #     print(self.extractKanjiList)
 
     def add(self, readings):
-        if readings.get('w') not in self.wordList:
-            # add từ vào wordList
-            temp = NonKanji(readings.get('w'), 'javi', 'word')
-            word_id = temp.getMobileId()
-            writing = readings.get('w')
-            meaning = readings.get('m')
-            furigana = readings.get('p')
-            #print(word_id, writing, meaning, furigana)
-            new_word = self.addWord(word_id, writing, meaning, furigana)
-            print(word_id, writing, meaning, furigana)
-            
-            # add từ vào extractkanjilist và kanjilist
-            extractList = self.extractKanji(readings.get('w'))
-            #print(extractList)
-            for element in extractList:
-                kanji = Kanji(element, 'javi', 'kanji')
-                mean = self.getSinoVietnamese(kanji) # lấy âm hán việt
-                kanji_id = kanji.getMobileId()
+        # add từ vào wordList
+        temp = NonKanji(readings.get('w'), 'javi', 'word')
+        word_id = temp.getMobileId()
+        writing = readings.get('w')
+        meaning = readings.get('m')
+        furigana = readings.get('p')
+        #print(word_id, writing, meaning, furigana)
+        new_word = self.addWord(word_id, writing, meaning, furigana)
+        #print(word_id, writing, meaning, furigana)
+        
+        # add từ vào extractkanjilist và kanjilist
+        extractList = self.extractKanji(readings.get('w'))
+        #print(extractList)
+        for element in extractList:
+            kanji = Kanji(element, 'javi', 'kanji')
+            mean = self.getSinoVietnamese(kanji) # lấy âm hán việt
+            kanji_id = kanji.getMobileId()
 
-                #print(kanji_id, element, mean)
-                self.addKanji(kanji_id, element, mean, new_word)
+            #print(kanji_id, element, mean)
+            self.addKanji(kanji_id, element, mean, new_word)
 
     def addWordsRelatedToKanji(self, word, num_vocab): #word là một object Class
         # Lấy data
@@ -110,4 +106,26 @@ class Flashcard:
             'p': p
         }
         self.add(reading)
-        self.log()
+
+    def deleteWord(self, word):
+        obj = FlashcardWord.objects.get(writing = word)
+        obj.list.remove(self.list)
+
+    def deleteList(self):
+        self.list.delete()
+
+    def exportToTxt(self):
+        setting = "#separator:tab\n#html:false\n"
+        filename = self.name
+        words = FlashcardWord.objects.filter(list=self.list)
+        data = ""
+        for word in words:
+            w = word.writing
+            p = word.furigana
+            m = word.meaning
+            hanviet = ""
+            kanjiList = FlashcardKanji.objects.filter(word=word)
+            for kanji in kanjiList:
+                hanviet += kanji.hanviet + ' '
+            data += f'{w}\t{p}\t{m}\t{hanviet}\n'
+        print(setting + data)

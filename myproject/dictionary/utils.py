@@ -3,7 +3,6 @@ import requests
 from .serializers import KanjiSerializer, WordSerializer, ExampleSerializer, CommentSerializer, ReadingSerializer
 import xml.etree.ElementTree as ET
 from django.http import JsonResponse
-from .models import Example, Reading
 
 class Word:
     word: str
