@@ -21,10 +21,6 @@ class Flashcard:
         self.name = name
         self.list = self.addList()
 
-    #def addWord(self, content, list_id, id):
-        # self.wordList.append_if_not_exists((content, list_id, id))
-        # return 1
-    
     def is_kanji(self, char):
         return '\u4e00' <= char <= '\u9fff'
     
@@ -47,35 +43,35 @@ class Flashcard:
     def addList(self):
         return FlashcardList.add(self.name)
 
-    # def log(self):
-    #     print('Kanji List :')
-    #     print(self.kanjiList)
-    #     print('Word List:')
-    #     print(self.wordList)
-    #     print('Extract Kanji List:')
-    #     print(self.extractKanjiList)
-
     def add(self, readings):
         # add từ vào wordList
         temp = NonKanji(readings.get('w'), 'javi', 'word')
         word_id = temp.getMobileId()
-        writing = readings.get('w')
-        meaning = readings.get('m')
-        furigana = readings.get('p')
-        #print(word_id, writing, meaning, furigana)
-        new_word = self.addWord(word_id, writing, meaning, furigana)
-        #print(word_id, writing, meaning, furigana)
-        
-        # add từ vào extractkanjilist và kanjilist
-        extractList = self.extractKanji(readings.get('w'))
-        #print(extractList)
-        for element in extractList:
-            kanji = Kanji(element, 'javi', 'kanji')
-            mean = self.getSinoVietnamese(kanji) # lấy âm hán việt
-            kanji_id = kanji.getMobileId()
+    
+        try: #kiểm tra word đã từng được tạo trước đây chưa
+            obj = FlashcardWord.objects.get(id=word_id)
+            obj.list.add(self.list)
 
-            #print(kanji_id, element, mean)
-            self.addKanji(kanji_id, element, mean, new_word)
+        except ObjectDoesNotExist: 
+            writing = readings.get('w')
+            meaning = readings.get('m')
+            furigana = readings.get('p')
+            new_word = self.addWord(word_id, writing, meaning, furigana)
+            
+            # add từ vào extractkanjilist và kanjilist
+            extractList = self.extractKanji(readings.get('w'))
+
+            for element in extractList:
+                kanji = Kanji(element, 'javi', 'kanji')
+                kanji_id = kanji.getMobileId()
+
+                try: #kiểm tra kanji đã từng được tạo trước đây chưa
+                    obj = FlashcardKanji.objects.get(id=kanji_id)
+                    obj.word.add(new_word)
+
+                except ObjectDoesNotExist: 
+                    mean = self.getSinoVietnamese(kanji) # lấy âm hán việt
+                    self.addKanji(kanji_id, element, mean, new_word)
 
     def addWordsRelatedToKanji(self, word, num_vocab): #word là một object Class
         # Lấy data
@@ -92,9 +88,6 @@ class Flashcard:
         for _, readings in exampleOn:
             for i in range(min(num_vocab, len(readings))):
                 self.add(readings[i])
-
-        # self.log()
-        return 1
 
     def addNonKanji(self, word):
         wordMeaning = word.getMeaning()
@@ -115,19 +108,32 @@ class Flashcard:
     def deleteList(self):
         self.list.delete()
 
+    def getCard(self, word):
+        w = word.writing
+        p = word.furigana
+        m = word.meaning
+        hanviet = ""
+        kanjiList = FlashcardKanji.objects.filter(word=word)
+        for kanji in kanjiList:
+            hanviet += kanji.hanviet + ' '
+        return {
+            'w': w,
+            'p': p,
+            'm': m,
+            'hanviet': hanviet
+        }
+
     def exportToTxt(self):
         setting = "#separator:tab\n#html:false\n"
         filename = self.name + '.txt'
         words = FlashcardWord.objects.filter(list=self.list)
         data = ""
         for word in words:
-            w = word.writing
-            p = word.furigana
-            m = word.meaning
-            hanviet = ""
-            kanjiList = FlashcardKanji.objects.filter(word=word)
-            for kanji in kanjiList:
-                hanviet += kanji.hanviet + ' '
+            card = self.getCard(word)
+            w = card.get('w')
+            p = card.get('p')
+            m = card.get('m')
+            hanviet = card.get('hanviet')
             data += f'{w}\t{p}\t{m}\t{hanviet}\n'
         print(setting + data)
         try:
