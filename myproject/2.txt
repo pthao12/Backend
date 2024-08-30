@@ -1,0 +1,7 @@
+#separator:tab
+#html:false
+正す	ただす	Sửa	CHÁNH 
+正に	まさに	Đúng đắn	CHÁNH 
+不正	ふせい	Bất chánh	CHÁNH BẤT 
+正午	しょうご	Buổi trưa	CHÁNH NGỌ 
+正しい	ただしい	Chính	CHÁNH 

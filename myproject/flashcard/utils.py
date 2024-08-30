@@ -1,3 +1,4 @@
+import os
 from .models import FlashcardKanji, FlashcardList, FlashcardWord
 from dictionary.utils import Kanji, NonKanji
 from django.core.exceptions import ObjectDoesNotExist
@@ -116,7 +117,7 @@ class Flashcard:
 
     def exportToTxt(self):
         setting = "#separator:tab\n#html:false\n"
-        filename = self.name
+        filename = self.name + '.txt'
         words = FlashcardWord.objects.filter(list=self.list)
         data = ""
         for word in words:
@@ -129,3 +130,15 @@ class Flashcard:
                 hanviet += kanji.hanviet + ' '
             data += f'{w}\t{p}\t{m}\t{hanviet}\n'
         print(setting + data)
+        try:
+            # Kiểm tra xem file đã tồn tại chưa và thông báo
+            if os.path.exists(filename):
+                print(f"File {filename} đã tồn tại và sẽ bị ghi đè.")
+            else:
+                print(f"Tạo mới file {filename}.")
+
+            # Mở file và ghi dữ liệu vào
+            with open(filename, 'w', encoding='utf-8') as file:
+                file.write(setting + data)
+        except IOError as e:
+            print(f"Không thể mở hoặc ghi file {filename}: {e}")

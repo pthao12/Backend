@@ -17,9 +17,8 @@ def searchWordMeaning(request):
                 results = Kanji(search_word, lang, search_type)
                 temp = Flashcard("2")
                 temp.deleteWord("正しい")
-                #temp.addWordsRelatedToKanji(results, 1)
+                temp.addWordsRelatedToKanji(results, 1)
                 temp.exportToTxt()
-                temp.deleteList()
                 print('end')
                 #check = getWordsRelatedToKanji(results)
             else:
