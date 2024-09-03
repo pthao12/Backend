@@ -1,0 +1,182 @@
+<!-- <!DOCTYPE html>
+<html>
+<head>
+    <title>Speech to Text and Audio Playback</title>
+</head>
+<body>
+    <button id="record-btn">Record</button>
+    <button id="stop-btn" disabled>Stop</button>
+    <button id="playback-btn" disabled>Playback</button>
+    <p id="transcription"></p>
+    <audio id="recorded-audio" controls></audio>
+
+    <script>
+        const recordBtn = document.getElementById('record-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const playbackBtn = document.getElementById('playback-btn');
+        const transcriptionElem = document.getElementById('transcription');
+        const recordedAudioElem = document.getElementById('recorded-audio');
+
+        let mediaRecorder;
+        let audioChunks = [];
+
+        recordBtn.addEventListener('click', () => {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.start();
+
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = event => {
+                        audioChunks.push(event.data);
+                    };
+
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        const audioUrl = URL.createObjectURL(audioBlob);
+                        recordedAudioElem.src = audioUrl;
+
+                        // Enable the playback button once recording stops
+                        playbackBtn.disabled = false;
+
+                        // Send the audio data to the server for transcription
+                        const formData = new FormData();
+                        formData.append('audio', audioBlob, 'audio.wav');
+
+                        fetch('/transcribe/', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.transcription) {
+                                transcriptionElem.textContent = data.transcription;
+                            } else {
+                                transcriptionElem.textContent = 'Error: ' + data.error;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error during transcription:', error);
+                        });
+                    };
+
+                    // Toggle button states
+                    recordBtn.disabled = true;
+                    stopBtn.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Error accessing microphone:', error);
+                });
+        });
+
+        stopBtn.addEventListener('click', () => {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                stopBtn.disabled = true;
+                recordBtn.disabled = false;
+            }
+        });
+
+        playbackBtn.addEventListener('click', () => {
+            recordedAudioElem.play();
+        });
+    </script>
+</body>
+</html> -->
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Speech to Text and Audio Playback</title>
+</head>
+<body>
+    <button id="record-btn">Record</button>
+    <button id="stop-btn" disabled>Stop</button>
+    <button id="playback-btn" disabled>Playback</button>
+    <button id="transcribe-btn" disabled>Transcribe</button>
+    <p id="transcription"></p>
+    <audio id="recorded-audio" controls></audio>
+
+    <script>
+        const recordBtn = document.getElementById('record-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const playbackBtn = document.getElementById('playback-btn');
+        const transcribeBtn = document.getElementById('transcribe-btn');
+        const transcriptionElem = document.getElementById('transcription');
+        const recordedAudioElem = document.getElementById('recorded-audio');
+
+        let mediaRecorder;
+        let audioChunks = [];
+        let audioBlob;
+
+        recordBtn.addEventListener('click', () => {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.start();
+
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = event => {
+                        audioChunks.push(event.data);
+                    };
+
+                    mediaRecorder.onstop = () => {
+                        audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        const audioUrl = URL.createObjectURL(audioBlob);
+                        recordedAudioElem.src = audioUrl;
+
+                        // Enable the playback and transcribe buttons once recording stops
+                        playbackBtn.disabled = false;
+                        transcribeBtn.disabled = false;
+                    };
+
+                    // Toggle button states
+                    recordBtn.disabled = true;
+                    stopBtn.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Error accessing microphone:', error);
+                });
+        });
+
+        stopBtn.addEventListener('click', () => {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                stopBtn.disabled = true;
+                recordBtn.disabled = false;
+            }
+        });
+
+        playbackBtn.addEventListener('click', () => {
+            recordedAudioElem.play();
+        });
+
+        transcribeBtn.addEventListener('click', () => {
+            if (audioBlob) {
+                const formData = new FormData();
+                formData.append('audio', audioBlob, 'audio.wav');
+
+                fetch('/audio/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.transcription) {
+                        transcriptionElem.textContent = data.transcription;
+                    } else {
+                        transcriptionElem.textContent = 'Error: ' + data.error;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error during transcription:', error);
+                    transcriptionElem.textContent = 'Error: Unable to transcribe audio.';
+                });
+            }
+        });
+    </script>
+</body>
+</html>
