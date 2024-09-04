@@ -22,8 +22,9 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('dictionary.urls')),
-    path('drawings/', include('drawingboard.urls')),
+    path('api/dictionary/', include('dictionary.urls')),
+    path('api/flashcard/', include('flashcard.urls')),
+    #path('drawings/', include('drawingboard.urls')),
 ]
 
 if settings.DEBUG:

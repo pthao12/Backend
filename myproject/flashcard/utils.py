@@ -148,3 +148,11 @@ class Flashcard:
                 file.write(setting + data)
         except IOError as e:
             print(f"Không thể mở hoặc ghi file {filename}: {e}")
+    
+    def getList(self):
+        words = FlashcardWord.objects.filter(list=self.list)
+        result = []
+        for word in words:
+            card = self.getCard(word)
+            result.append(card)
+        return result

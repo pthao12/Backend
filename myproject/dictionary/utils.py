@@ -10,7 +10,7 @@ class Word:
     type: str
     mobileId: str
 
-    def __init__(self, word, lang, type, mobileId=None):
+    def __init__(self, word, lang='javi', type=None, mobileId=None):
         # Khởi tạo các thuộc tính
         self.word = word
         self.lang = lang
