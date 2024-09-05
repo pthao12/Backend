@@ -58,7 +58,7 @@ class Word:
             'type': 'example',
             'dict': self.lang,
             'query': self.word,
-            'limit': '5'
+            'limit': '3'
         }, headers={'Content-Type': 'application/json'})
 
         if response.status_code != 200:
@@ -132,8 +132,7 @@ class Kanji(Word):
             'wordId': self.getMobileId(),
             'type': 'kanji',
             'dict': 'javi',
-            'word': self.word,
-            'limit': '3'
+            'word': self.word
         }, headers={'Content-Type': 'application/json'})
         
         if response.status_code != 200:
@@ -145,6 +144,7 @@ class Kanji(Word):
             return {"error": "No data found for the given word"}
                     
         commentData = commentData.get('result', [])
+        commentData = commentData[:3]
         result = {}
 
         if not commentData:
@@ -245,8 +245,7 @@ class NonKanji(Word):
                 'wordId': self.getMobileId(),
                 'type': 'word',
                 'dict': 'javi',
-                'word': self.word,
-                'limit': '3'
+                'word': self.word
             },
             headers={'Content-Type': 'application/json'})
 
@@ -259,6 +258,7 @@ class NonKanji(Word):
             return {"error": "No data found for the given word"}
                     
         commentData = commentData.get('result', [])
+        commentData = commentData[:3]
         result = {}
 
         if not commentData:

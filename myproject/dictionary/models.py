@@ -7,6 +7,9 @@ class WordExample(models.Model):
     
 class Comment(models.Model):
     mean = models.TextField()
+    like = models.IntegerField(default=0, blank=True, null=True) 
+    dislike = models.IntegerField(default=0, blank=True, null=True)
+    username = models.CharField(max_length=255, null=True, blank=True)
 
 class WordMeaning(models.Model):
     short_mean = models.CharField(max_length=255, null=True, blank=True)
