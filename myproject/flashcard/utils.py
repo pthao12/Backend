@@ -120,7 +120,7 @@ class Flashcard:
             'w': w,
             'p': p,
             'm': m,
-            'hanviet': hanviet
+            'h': hanviet
         }
 
     def exportToTxt(self):

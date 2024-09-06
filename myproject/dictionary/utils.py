@@ -58,7 +58,7 @@ class Word:
             'type': 'example',
             'dict': self.lang,
             'query': self.word,
-            'limit': '3'
+            'limit': 3
         }, headers={'Content-Type': 'application/json'})
 
         if response.status_code != 200:
@@ -112,18 +112,12 @@ class Kanji(Word):
             return {"error": "No data found for the given word"}
         
         meaning = KanjiSerializer(data = wordData[0])
+        
         if meaning.is_valid():
             meaning = meaning.validated_data
             self.mobileId = meaning.get('mobileId')
             return meaning
-        # print('end')
-        # print(meaning)
-
-        # for i, kanji in enumerate(wordData):
-        #     meaning[i] = KanjiSerializer(data = kanji)
-        #     if meaning[i].is_valid():
-        #         meaning[i] = meaning[i].validated_data
-        #         self.mobileId = meaning[i].get('mobileId')
+        
         return {}
     
     def getComment(self):
@@ -196,7 +190,7 @@ class Kanji(Word):
                 # If needed, you can extract specific parts from the SVG data here.
                 # For simplicity, we'll return the whole SVG data.
                 svg_data = ET.tostring(root, encoding='unicode')
-                return HttpResponse(svg_data, content_type="image/svg+xml")
+                return svg_data
             except ET.ParseError as e:
                 return JsonResponse({'error': 'Error parsing XML', 'details': str(e)}, status=500)
 

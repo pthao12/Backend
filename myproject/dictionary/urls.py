@@ -5,7 +5,8 @@ from . import views
 urlpatterns = [
     path('', searchWordMeaning, name='search-field'),
     path('suggestions/', searchWordSuggestion, name='suggestions'),
-    path('search/<str:pk>/', views.searchWord, name='search-field'),
+    path('search/word/<str:pk>/', views.searchWord),
+    path('search/kanji/<str:pk>/', views.searchKanji),
     path('suggestion/<str:pk>/', views.getSuggestion, name='suggestions')
     # path('kanji-art/', getKanjiArt, name='kanji_art')
 ]
