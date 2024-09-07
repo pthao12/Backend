@@ -1,8 +1,8 @@
-from django.http import HttpResponse
 import requests
 from .serializers import KanjiSerializer, WordSerializer, ExampleSerializer, CommentSerializer, ReadingSerializer
 import xml.etree.ElementTree as ET
 from django.http import JsonResponse
+from .getImgBySelenium import getImgBySelenium
 
 class Word:
     word: str
@@ -264,6 +264,9 @@ class NonKanji(Word):
                 result[i] = result[i].validated_data
 
         return result     
+
+    def getImg(self):
+        return getImgBySelenium(self.word)
 
 def unicode_encoding(word):
     # Get the Unicode code point of the first character

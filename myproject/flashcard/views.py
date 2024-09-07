@@ -21,6 +21,9 @@ def getListDetail(request, pk):
             obj = FlashcardList.objects.get(id=pk)
             print(obj, pk)
             #print(Flashcard(f'{pk}').getList())
-            return Response(Flashcard(f'{pk}').getList())
+            return Response({
+                "words" : Flashcard(f'{pk}').getList(),
+                "name": pk
+            })
         except ObjectDoesNotExist: 
             return Response("")
