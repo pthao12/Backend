@@ -31,7 +31,7 @@ def getImgBySelenium(searchTerm):
         img_src = img_element.get_attribute('src')
         
         # In ra URL ảnh và trả về
-        # print(f"Image URL: {img_src}")
+        print(f"Image URL: {img_src}")
         # img_end_time = time.time()
         # print(f"fetch_link took {img_end_time - img_start_time:.4f} seconds")
         return img_src

@@ -15,6 +15,14 @@ def searchWord(request, pk):
         return Response(result)
     
 @api_view(['GET'])
+def getImg(request, pk):
+    if request.method == 'GET':
+        word = NonKanji(pk, 'javi', 'word')
+        result = word.getImg()
+        print('hihi im comming')
+        return Response(result)
+    
+@api_view(['GET'])
 def searchKanji(request, pk):
     if request.method == 'GET':
         kanji = Kanji(pk, 'javi', 'kanji')
