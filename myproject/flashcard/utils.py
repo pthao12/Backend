@@ -113,6 +113,7 @@ class Flashcard:
         self.list.delete()
 
     def getCard(self, word):
+        id = word.id
         w = word.writing
         p = word.furigana
         m = word.meaning
@@ -122,6 +123,7 @@ class Flashcard:
         for kanji in kanjis:
             hanviet += kanji.hanviet + ' '
         return {
+            'id': id,
             'w': w,
             'p': p,
             'm': m,
