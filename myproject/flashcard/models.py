@@ -1,6 +1,6 @@
 from django.db import models
-from django.db.models.query import QuerySet
-
+import random
+import string
 
 # Create your models here.
 class FlashcardList(models.Model):
@@ -20,13 +20,16 @@ class FlashcardList(models.Model):
 
 class FlashcardWord(models.Model):
     id = models.CharField(max_length=10, unique=True, primary_key=True, default='None')
-    writing = models.CharField(max_length=100, null=True, blank=True)
+    writing = models.CharField(max_length=100, unique=True, null=True, blank=True)
     meaning = models.CharField(max_length=100, null=True, blank=True)
     furigana = models.CharField(max_length=100, null=True, blank=True)
     list = models.ManyToManyField(FlashcardList, related_name='words')
 
     @classmethod
-    def add(cls, id=None, writing=None, meaning=None, furigana=None, list_id=None):
+    def add(cls, id=None, writing=None, meaning=None, furigana=None, list=None):
+        if id is None:
+            id = cls.generate_unique_id() 
+
         # Kiểm tra xem đối tượng đã tồn tại chưa
         temp, created = cls.objects.get_or_create(id=id, defaults={
             'writing': writing,
@@ -37,8 +40,15 @@ class FlashcardWord(models.Model):
             # Nếu đối tượng mới được tạo, thực hiện thêm logic nếu cần
             pass
         # Cập nhật mối quan hệ nhiều-nhiều nếu có danh sách các đối tượng FlashcardList
-        temp.list.add(list_id)
+        temp.list.add(list)
         return temp
+    
+    @staticmethod
+    def generate_unique_id(length=5):
+        while True:
+            id = ''.join(random.choices(string.digits, k=length))
+            if not FlashcardWord.objects.filter(id=id).exists():
+                return id
 
 class FlashcardKanjiList(models.Model):
     id = models.AutoField(primary_key=True, unique=True)

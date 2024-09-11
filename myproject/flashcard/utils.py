@@ -28,6 +28,24 @@ class Flashcard:
         kanji_list = [char for char in word if self.is_kanji(char)]
         return kanji_list # return a list
     
+    def findAndaddKanjiList(self, word):
+        # add từ vào extractkanjilist và kanjilist
+        extractList = self.extractKanji(word.writing)
+
+        new_kanjiList = self.addKanjiList(word)
+        for element in extractList:
+            kanji = Kanji(element, 'javi', 'kanji')
+            kanji_id = kanji.getMobileId()
+
+            try: #kiểm tra kanji đã từng được tạo trước đây chưa nếu có rồi thì chỉ thêm vào kanjiList
+                obj = FlashcardKanji.objects.get(id=kanji_id) 
+                obj.kanjilist.add(new_kanjiList)
+                # print("đem it")
+
+            except ObjectDoesNotExist: 
+                mean = self.getSinoVietnamese(kanji) # lấy âm hán việt
+                self.addKanji(kanji_id, element, mean, new_kanjiList)
+    
     def getSinoVietnamese(self, kanji): # đầu vào là một object Word
         kanjiMeaning = kanji.getMeaning().get('mean').split(',')
         return kanjiMeaning[0].strip() # Lấy âm hán việt
@@ -59,23 +77,8 @@ class Flashcard:
             meaning = readings.get('m')
             furigana = readings.get('p')
             new_word = self.addWord(word_id, writing, meaning, furigana)
-            new_kanjiList = self.addKanjiList(new_word)
-
-            # add từ vào extractkanjilist và kanjilist
-            extractList = self.extractKanji(readings.get('w'))
-
-            for element in extractList:
-                kanji = Kanji(element, 'javi', 'kanji')
-                kanji_id = kanji.getMobileId()
-
-                try: #kiểm tra kanji đã từng được tạo trước đây chưa nếu có rồi thì chỉ thêm vào kanjiList
-                    obj = FlashcardKanji.objects.get(id=kanji_id) 
-                    obj.kanjilist.add(new_kanjiList)
-                    # print("đem it")
-
-                except ObjectDoesNotExist: 
-                    mean = self.getSinoVietnamese(kanji) # lấy âm hán việt
-                    self.addKanji(kanji_id, element, mean, new_kanjiList)
+            self.findAndaddKanjiList(new_word)
+            
 
     def addWordsRelatedToKanji(self, word, num_vocab): #word là một object Class
         # Lấy data
