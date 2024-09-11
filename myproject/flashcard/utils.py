@@ -133,7 +133,7 @@ class Flashcard:
             w = card.get('w')
             p = card.get('p')
             m = card.get('m')
-            hanviet = card.get('hanviet')
+            hanviet = card.get('h')
             data += f'{w}\t{p}\t{m}\t{hanviet}\n'
         print(setting + data)
         try:
