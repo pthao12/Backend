@@ -18,7 +18,7 @@ def getListDetail(request, pk):
 
     if request.method == 'GET':
         try: #kiểm tra word đã từng được tạo trước đây chưa
-            obj = FlashcardList.objects.get(id=pk)
+            obj = FlashcardList.objects.get(name=pk)
             print(obj, pk)
             #print(Flashcard(f'{pk}').getList())
             return Response({

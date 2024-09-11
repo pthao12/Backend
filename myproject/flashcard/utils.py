@@ -1,5 +1,5 @@
 import os
-from .models import FlashcardKanji, FlashcardList, FlashcardWord
+from .models import FlashcardKanji, FlashcardList, FlashcardWord, FlashcardKanjiList
 from dictionary.utils import Kanji, NonKanji
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -32,9 +32,11 @@ class Flashcard:
         kanjiMeaning = kanji.getMeaning().get('mean').split(',')
         return kanjiMeaning[0].strip() # Lấy âm hán việt
 
-    def addKanji(self, kanji_id, writing, hanviet, word):
-        print(kanji_id)
-        return FlashcardKanji.add(kanji_id, writing, hanviet, word.id)
+    def addKanji(self, kanji_id, writing, hanviet, kanjilist):
+        return FlashcardKanji.add(kanji_id, writing, hanviet, kanjilist)
+    
+    def addKanjiList(self, word):
+        return FlashcardKanjiList.add(word)
 
     def addWord(self, word_id, writing, meaning, furigana):
         print(self.list)
@@ -57,7 +59,8 @@ class Flashcard:
             meaning = readings.get('m')
             furigana = readings.get('p')
             new_word = self.addWord(word_id, writing, meaning, furigana)
-            
+            new_kanjiList = self.addKanjiList(new_word)
+
             # add từ vào extractkanjilist và kanjilist
             extractList = self.extractKanji(readings.get('w'))
 
@@ -65,13 +68,14 @@ class Flashcard:
                 kanji = Kanji(element, 'javi', 'kanji')
                 kanji_id = kanji.getMobileId()
 
-                try: #kiểm tra kanji đã từng được tạo trước đây chưa
-                    obj = FlashcardKanji.objects.get(id=kanji_id)
-                    obj.word.add(new_word)
+                try: #kiểm tra kanji đã từng được tạo trước đây chưa nếu có rồi thì chỉ thêm vào kanjiList
+                    obj = FlashcardKanji.objects.get(id=kanji_id) 
+                    obj.kanjilist.add(new_kanjiList)
+                    # print("đem it")
 
                 except ObjectDoesNotExist: 
                     mean = self.getSinoVietnamese(kanji) # lấy âm hán việt
-                    self.addKanji(kanji_id, element, mean, new_word)
+                    self.addKanji(kanji_id, element, mean, new_kanjiList)
 
     def addWordsRelatedToKanji(self, word, num_vocab): #word là một object Class
         # Lấy data
@@ -113,8 +117,9 @@ class Flashcard:
         p = word.furigana
         m = word.meaning
         hanviet = ""
-        kanjiList = FlashcardKanji.objects.filter(word=word)
-        for kanji in kanjiList:
+        kanjiList = FlashcardKanjiList.objects.filter(word=word).first()
+        kanjis = FlashcardKanji.objects.filter(kanjilist=kanjiList)
+        for kanji in kanjis:
             hanviet += kanji.hanviet + ' '
         return {
             'w': w,

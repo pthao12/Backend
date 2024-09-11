@@ -40,14 +40,30 @@ class FlashcardWord(models.Model):
         temp.list.add(list_id)
         return temp
 
+class FlashcardKanjiList(models.Model):
+    id = models.AutoField(primary_key=True, unique=True)
+    word = models.OneToOneField(FlashcardWord, related_name='kanjilist', on_delete=models.CASCADE)
+
+    @classmethod
+    def add(cls, word=None):
+        # Kiểm tra xem đối tượng đã tồn tại chưa
+        temp, created = cls.objects.get_or_create(word=word)
+        if created:
+            # Nếu đối tượng mới được tạo, thực hiện thêm logic nếu cần
+            pass
+
+        # temp.kanjilist.add(word)
+
+        return temp
+
 class FlashcardKanji(models.Model):
     id = models.CharField(max_length=10, unique=True, primary_key=True, default='None')
     writing = models.CharField(max_length=100, null=True, blank=True)
     hanviet = models.CharField(max_length=100, null=True, blank=True)
-    word = models.ManyToManyField(FlashcardWord, related_name='kanjis')
+    kanjilist = models.ManyToManyField(FlashcardKanjiList, related_name='kanjis')
 
     @classmethod
-    def add(cls, id=None, writing=None, hanviet=None, word_id=None):
+    def add(cls, id=None, writing=None, hanviet=None, kanjilist=None):
         # Kiểm tra xem đối tượng đã tồn tại chưa
         temp, created = cls.objects.get_or_create(id=id, defaults={
             'writing': writing,
@@ -57,6 +73,6 @@ class FlashcardKanji(models.Model):
             # Nếu đối tượng mới được tạo, thực hiện thêm logic nếu cần
             pass
 
-        temp.word.add(word_id)
+        temp.kanjilist.add(kanjilist)
 
         return temp
