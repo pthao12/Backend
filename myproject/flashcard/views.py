@@ -11,7 +11,7 @@ from rest_framework import status
 # Create your views here.
 @api_view(['GET'])
 def getLists(request):
-    lists = FlashcardList.objects.all()
+    lists = FlashcardList.objects.all().order_by('name')
     serializer = ListSerializer(lists, many=True)
     return Response(serializer.data)
     
@@ -28,7 +28,23 @@ def getListDetail(request, pk):
     except ObjectDoesNotExist: 
         return Response("")
 
-from django.views.decorators.csrf import csrf_exempt
+@api_view(['POST'])
+def createList(request):
+    data = request.data
+    name = data.get('name', '').strip()  # Lấy giá trị name từ request và loại bỏ khoảng trắng đầu và cuối
+    
+    # Kiểm tra xem tên đã tồn tại chưa
+    existing_list = FlashcardList.objects.filter(name=name).first()
+    
+    if existing_list:
+        # Nếu danh sách với tên đã tồn tại, trả về thông báo lỗi
+        return Response({'error': 'Tên danh sách này đã tồn tại.'}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        # Nếu danh sách chưa tồn tại, tạo mới và trả về thông tin danh sách mới
+        new_list = FlashcardList.objects.create(name=name)
+        serializer = ListSerializer(new_list)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 
 @api_view(['PUT'])
 def updateWord(request, pk):
@@ -46,10 +62,31 @@ def updateWord(request, pk):
     return Response(serializer.data)
 
 @api_view(['DELETE'])
-def deleteWord(request, pk):
-    word = FlashcardWord.objects.get(id=pk)
-    word.delete()
-    return Response('Word was deleted')
+def deleteWord(request):
+    data = request.data
+    wordId = data['wordId']
+    listId = data['listId']
+    
+    try:
+        word = FlashcardWord.objects.get(id=wordId)
+        list = FlashcardList.objects.get(id=listId)
+
+        # Xóa liên kết giữa từ và danh sách
+        word.list.remove(list)
+
+        # Kiểm tra nếu từ không còn liên kết với danh sách nào, thì xóa từ đó
+        if word.list.count() == 0:
+            word.delete()
+            return Response({'success': 'Từ đã được xóa hoàn toàn.'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'success': 'Từ đã được xóa khỏi danh sách.'}, status=status.HTTP_200_OK)
+
+    except FlashcardWord.DoesNotExist:
+        return Response({'error': 'Từ không tồn tại.'}, status=status.HTTP_404_NOT_FOUND)
+    except FlashcardList.DoesNotExist:
+        return Response({'error': 'Danh sách không tồn tại.'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': f'Có lỗi xảy ra: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
 def createWord(request):
