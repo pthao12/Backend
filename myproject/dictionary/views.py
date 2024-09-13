@@ -19,7 +19,6 @@ def getImg(request, pk):
     if request.method == 'GET':
         word = NonKanji(pk, 'javi', 'word')
         result = word.getImg()
-        print('hihi im comming')
         return Response(result)
     
 @api_view(['GET'])
