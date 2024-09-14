@@ -8,6 +8,7 @@ def searchWord(request, pk):
     if request.method == 'GET':
         word = NonKanji(pk, 'javi', 'word')
         result = {
+            'mobileId': word.mobileId,
             'meaning': word.getMeaning(),
             'example': word.getExample(),
             'comment': word.getComment()

@@ -20,11 +20,14 @@ class FlashcardList(models.Model):
 
 class FlashcardWord(models.Model):
     id = models.CharField(max_length=10, unique=True, primary_key=True, default='None')
-    writing = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    writing = models.CharField(max_length=100, null=True, blank=True)
     meaning = models.CharField(max_length=100, null=True, blank=True)
     furigana = models.CharField(max_length=100, null=True, blank=True)
     list = models.ManyToManyField(FlashcardList, related_name='words')
 
+    class Meta:
+        unique_together = ('writing', 'meaning', 'furigana')
+        
     @classmethod
     def add(cls, id=None, writing=None, meaning=None, furigana=None, list=None):
         if id is None:

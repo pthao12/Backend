@@ -1,4 +1,4 @@
-from .utils import Flashcard
+from .utils import Flashcard, NonKanji
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import FlashcardList, FlashcardWord
@@ -45,6 +45,26 @@ def createList(request):
         serializer = ListSerializer(new_list)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+@api_view(['DELETE'])
+def deleteList(request, pk):
+    list = FlashcardList.objects.get(id=pk)
+    list.delete()
+    return Response('Word was deleted')
+
+@api_view(['PUT'])
+def updateList(request, pk):
+    data = request.data
+    print('request data: ', data)
+    list = FlashcardList.objects.get(id=pk)
+    serializer = ListSerializer(instance=list, data=data, partial=True)
+    print(serializer)
+    if serializer.is_valid():
+        serializer.save()
+        print('Data Saved Successfully')  # Thông báo khi lưu thành công
+    else:
+        print('Errors:', serializer.errors)  # In lỗi nếu dữ liệu không hợp lệ
+
+    return Response(serializer.data)
 
 @api_view(['PUT'])
 def updateWord(request, pk):
@@ -91,6 +111,7 @@ def deleteWord(request):
 @api_view(['POST'])
 def createWord(request):
     data = request.data
+    print(data)
     try:
         list = FlashcardList.objects.get(id=data['listId'])
         existing_word = FlashcardWord.objects.filter(
@@ -99,13 +120,16 @@ def createWord(request):
             furigana=data['p']
         ).first()
 
+        print(existing_word)
         if existing_word:
             existing_word.list.add(list)
             serializer = WordSerializer(existing_word, many=False)
             return Response(serializer.data)
         else:
+            print('case2')
             word = FlashcardWord.add(None, data['w'], data['m'], data['p'], list)
             Flashcard(f'{list.name}').findAndaddKanjiList(word)
+            print('done')
             serializer = WordSerializer(word, many=False)
             return Response(serializer.data)
     except IntegrityError:
@@ -114,3 +138,24 @@ def createWord(request):
     except Exception:
         # Xử lý các lỗi khác
         return Response({'error': 'Có lỗi xảy ra khi thêm từ mới.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+@api_view(['POST'])
+def addWord(request):
+    try:
+        data = request.data
+        word_text = data['w']
+        list_id = data['listId']
+        
+        word = NonKanji(word_text, 'javi', 'word')
+        
+        # Fetch the FlashcardList
+        list = FlashcardList.objects.get(id=list_id)
+        
+        # Add word to Flashcard
+        flashcard = Flashcard(f'{list.name}')
+        flashcard.addNonKanji(word)
+        
+        return Response(status=status.HTTP_201_CREATED)
+    
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
