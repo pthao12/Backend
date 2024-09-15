@@ -24,6 +24,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/dictionary/', include('dictionary.urls')),
     path('api/flashcard/', include('flashcard.urls')),
+    path('api/', include('api.urls')),
     #path('drawings/', include('drawingboard.urls')),
 ]
 

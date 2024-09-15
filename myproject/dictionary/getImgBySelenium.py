@@ -15,7 +15,7 @@ def getImgBySelenium(searchTerm):
     chrome_options.add_argument('--ignore-certificate-errors')  # Bỏ qua lỗi chứng chỉ
 
     # Cung cấp đường dẫn đến chromedriver.exe
-    service = Service(executable_path="C:/Users/vuongbahanh/Documents/Dai_hoc/Ki_he/LearningJapaneseApp/Backend/myproject/dictionary/chromedriver/chromedriver.exe")
+    service = Service(executable_path="D:/Backend/myproject/dictionary/chromedriver/chromedriver.exe")
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
     try:
