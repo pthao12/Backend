@@ -6,3 +6,4 @@ python-decouple
 psycopg
 requests
 selenium
+openai
