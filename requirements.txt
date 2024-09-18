@@ -1,0 +1,9 @@
+django
+django-environ
+djangorestframework
+django-cors-headers
+python-decouple
+psycopg
+requests
+selenium
+openai
