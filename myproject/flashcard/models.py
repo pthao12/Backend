@@ -5,7 +5,7 @@ import string
 # Create your models here.
 class FlashcardList(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
-    name = models.CharField(max_length=100, null=True, blank=True)
+    name = models.CharField(max_length=255, null=True, blank=True)
     
 
     @classmethod
@@ -20,9 +20,9 @@ class FlashcardList(models.Model):
 
 class FlashcardWord(models.Model):
     id = models.CharField(max_length=10, unique=True, primary_key=True, default='None')
-    writing = models.CharField(max_length=100, null=True, blank=True)
-    meaning = models.CharField(max_length=100, null=True, blank=True)
-    furigana = models.CharField(max_length=100, null=True, blank=True)
+    writing = models.CharField(max_length=255, null=True, blank=True)
+    meaning = models.TextField(null=True, blank=True)
+    furigana = models.CharField(max_length=255, null=True, blank=True)
     list = models.ManyToManyField(FlashcardList, related_name='words')
 
     class Meta:
@@ -71,8 +71,8 @@ class FlashcardKanjiList(models.Model):
 
 class FlashcardKanji(models.Model):
     id = models.CharField(max_length=10, unique=True, primary_key=True, default='None')
-    writing = models.CharField(max_length=100, null=True, blank=True)
-    hanviet = models.CharField(max_length=100, null=True, blank=True)
+    writing = models.CharField(max_length=255, null=True, blank=True)
+    hanviet = models.CharField(max_length=255, null=True, blank=True)
     kanjilist = models.ManyToManyField(FlashcardKanjiList, related_name='kanjis')
 
     @classmethod
