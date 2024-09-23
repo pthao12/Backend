@@ -11,5 +11,6 @@ urlpatterns = [
     path('list/create/', views.createList, name='create_list'),
     path('list/<str:pk>/delete/', views.deleteList, name='delete_list'),
     path('list/<str:pk>/update/', views.updateList, name='update_list'),
+    path('list/<str:pk>/export/', views.exportList, name='export_list'),
     # path('kanji-art/', getKanjiArt, name='kanji_art')
 ]

@@ -134,7 +134,7 @@ class Flashcard:
         }
 
     def exportToTxt(self):
-        setting = "#separator:tab\n#html:false\n"
+        setting = "#separator:tab\n#html:false\n#tags column:6\n"
         filename = self.name + '.txt'
         words = FlashcardWord.objects.filter(list=self.list)
         data = ""
@@ -144,20 +144,21 @@ class Flashcard:
             p = card.get('p')
             m = card.get('m')
             hanviet = card.get('h')
-            data += f'{w}\t{p}\t{m}\t{hanviet}\n'
-        print(setting + data)
-        try:
-            # Kiểm tra xem file đã tồn tại chưa và thông báo
-            if os.path.exists(filename):
-                print(f"File {filename} đã tồn tại và sẽ bị ghi đè.")
-            else:
-                print(f"Tạo mới file {filename}.")
+            data += f'{w}\t{p}\t{hanviet}\t{m}\n'
+        return (setting + data)
+        # print(setting + data)
+        # try:
+        #     # Kiểm tra xem file đã tồn tại chưa và thông báo
+        #     if os.path.exists(filename):
+        #         print(f"File {filename} đã tồn tại và sẽ bị ghi đè.")
+        #     else:
+        #         print(f"Tạo mới file {filename}.")
 
-            # Mở file và ghi dữ liệu vào
-            with open(filename, 'w', encoding='utf-8') as file:
-                file.write(setting + data)
-        except IOError as e:
-            print(f"Không thể mở hoặc ghi file {filename}: {e}")
+        #     # Mở file và ghi dữ liệu vào
+        #     with open(filename, 'w', encoding='utf-8') as file:
+        #         file.write(setting + data)
+        # except IOError as e:
+        #     print(f"Không thể mở hoặc ghi file {filename}: {e}")
     
     def getList(self):
         words = FlashcardWord.objects.filter(list=self.list)

@@ -159,3 +159,12 @@ def addWord(request):
     
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def exportList(request, pk):
+    try: #kiểm tra word đã từng được tạo trước đây chưa
+        obj = FlashcardList.objects.get(id=pk)
+        exportData = Flashcard(f'{obj.name}').exportToTxt()
+        return Response(exportData, status=status.HTTP_200_OK)
+    except ObjectDoesNotExist: 
+        return Response("")
