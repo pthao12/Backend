@@ -13,11 +13,15 @@ def getImgBySelenium(searchTerm):
     chrome_options.add_argument("--no-sandbox")  # Bỏ qua chế độ sandbox để tránh lỗi khi chạy không có giao diện
     chrome_options.add_argument("--disable-dev-shm-usage")  # Bỏ qua lỗi bộ nhớ chia sẻ trong môi trường Docker
     chrome_options.add_argument('--ignore-certificate-errors')  # Bỏ qua lỗi chứng chỉ
+    chrome_options.add_argument("--disable-extensions")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--disable-background-networking")
+    chrome_options.add_argument("--disable-sync")
+    chrome_options.add_argument("--disable-plugins")
 
     # Cung cấp đường dẫn đến chromedriver.exe
-    service = Service(executable_path="D:/Backend/myproject/dictionary/chromedriver/chromedriver.exe")
+    service = Service(executable_path="./dictionary/chromedriver/chromedriver.exe")
     driver = webdriver.Chrome(service=service, options=chrome_options)
-
     try:
         driver.get(f"https://aisozai.com/irasutoya/search?for={searchTerm}")
         
@@ -41,9 +45,9 @@ def getImgBySelenium(searchTerm):
         print(f"Error: {e}")
         return ""
 
-    finally:
+    # finally:
         # Đóng trình duyệt
         #close_end_time = time.time()
         #print(f"fetch_close took {close_end_time - img_start_time:.4f} seconds")
-        driver.quit()
+        # driver.quit()
 
