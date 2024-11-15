@@ -1,7 +1,7 @@
 from .utils import Flashcard, NonKanji
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import FlashcardList, FlashcardWord
+from .models import FlashcardList, FlashcardWord, FlashcardUser
 from .serializers import ListSerializer, WordSerializer
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
@@ -10,10 +10,15 @@ from rest_framework import status
 
 # Create your views here.
 @api_view(['GET'])
-def getLists(request):
-    lists = FlashcardList.objects.all().order_by('name')
-    serializer = ListSerializer(lists, many=True)
-    return Response(serializer.data)
+def getLists(request, pk):
+    try: #kiểm tra word đã từng được tạo trước đây chưa
+        user = FlashcardUser.objects.get(id=pk)
+        print(user, pk)
+        lists = user.lists.all()
+        serializer = ListSerializer(lists, many=True)
+        return Response(serializer.data)
+    except ObjectDoesNotExist: 
+        return Response("")
     
 @api_view(['GET'])
 def getListDetail(request, pk):
@@ -33,15 +38,29 @@ def createList(request):
     data = request.data
     name = data.get('name', '').strip()  # Lấy giá trị name từ request và loại bỏ khoảng trắng đầu và cuối
     
-    # Kiểm tra xem tên đã tồn tại chưa
-    existing_list = FlashcardList.objects.filter(name=name).first()
+    user_id = data.get('uid')
+    user = FlashcardUser.add(user_id)
+    list = user.lists
     
-    if existing_list:
-        # Nếu danh sách với tên đã tồn tại, trả về thông báo lỗi
-        return Response({'error': 'Tên danh sách này đã tồn tại.'}, status=status.HTTP_400_BAD_REQUEST)
+    if list is not None:
+        # Kiểm tra xem tên đã tồn tại chưa
+        existing_list = list.all().filter(name=name).first()
+        
+        if existing_list:
+            # Nếu danh sách với tên đã tồn tại, trả về thông báo lỗi
+            return Response({'error': 'Tên danh sách này đã tồn tại.'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            new_list = FlashcardList.objects.create(name=name)
+            list.add(new_list)
+            user.save()  # Lưu thay đổi vào cơ sở dữ liệu
+            serializer = ListSerializer(new_list)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
     else:
         # Nếu danh sách chưa tồn tại, tạo mới và trả về thông tin danh sách mới
         new_list = FlashcardList.objects.create(name=name)
+        user.lists = new_list  # Gán danh sách mới vào user.lists
+        user.save()  # Lưu thay đổi vào cơ sở dữ liệu
         serializer = ListSerializer(new_list)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
